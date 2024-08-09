@@ -27,6 +27,7 @@
 -export([ add_to_path/2
         , get_allowed_errors/1
         , get_external_validator/1
+        , get_external_format_validator/1
         , get_current_path/1
         , get_current_path_value/1
         , get_current_schema/1
@@ -66,6 +67,7 @@
          , error_handler :: jesse:error_handler()
          , error_list :: jesse:error_list()
          , external_validator :: jesse:external_validator()
+         , external_format_validator :: jesse:external_format_validator()
          , id :: jesse:schema_id()
          , root_schema :: jesse:schema()
          , schema_loader_fun :: jesse:schema_loader_fun()
@@ -158,6 +160,9 @@ new(JsonSchema, Options) ->
   ExternalValidator = proplists:get_value( external_validator
                                          , Options
                                          ),
+  ExternalFormatValidator = proplists:get_value( external_format_validator
+                                               , Options
+                                               ),
   LoaderFun = proplists:get_value( schema_loader_fun
                                  , Options
                                  , ?default_schema_loader_fun
@@ -183,6 +188,7 @@ new(JsonSchema, Options) ->
                    , default_schema_ver = DefaultSchemaVer
                    , schema_loader_fun  = LoaderFun
                    , external_validator = ExternalValidator
+                   , external_format_validator = ExternalFormatValidator
                    , setter_fun         = SetterFun
                    , getter_fun         = GetterFun
                    , current_value      = Value
@@ -219,8 +225,8 @@ set_current_schema(#state{id = Id} = State, NewSchema0) ->
         [{?REF, Ref} | lists:keydelete(?REF, 1, ListSchema)]
     end,
   IdTag = case schema_from_json(NewSchema) of
-          ?json_schema_draft6 -> ?ID;
-                            _ -> ?ID_OLD
+            ?json_schema_draft6 -> ?ID;
+            _ -> ?ID_OLD
           end,
   NewSchemaId = jesse_json_path:value(IdTag, NewSchema, undefined),
   NewId = combine_id(Id, NewSchemaId),
@@ -271,9 +277,9 @@ resolve_ref(State, Reference) ->
               jesse_json_path:value(
                 ?SCHEMA, RemoteSchema, State#state.default_schema_ver),
             RemoteState = State#state{ root_schema = RemoteSchema
-                                  , id = BaseURI
-                                  , default_schema_ver = SchemaVer
-                                  },
+                                     , id = BaseURI
+                                     , default_schema_ver = SchemaVer
+                                     },
             {RemoteState, RemoteSchema}
         end
     end,
@@ -415,7 +421,7 @@ raw_canonical_path(Path) ->
 %% @doc Return a raw canonical path.
 %% @private
 raw_canonical_path2([], Acc) ->
-    lists:reverse(Acc);
+  lists:reverse(Acc);
 raw_canonical_path2([H|T], Acc) ->
   case H of
     "." ->
@@ -430,20 +436,20 @@ raw_canonical_path2([H|T], Acc) ->
 -spec load_schema( State :: state()
                  , SchemaURI :: string() | binary()
                  ) -> jesse:schema()
-                    | ?not_found.
+          | ?not_found.
 load_schema(State, SchemaURI) when is_binary(SchemaURI) ->
   load_schema(State, unicode:characters_to_list(SchemaURI));
 load_schema(#state{schema_loader_fun = LoaderFun}, SchemaURI) ->
   try LoaderFun(SchemaURI) of
-      {ok, Schema} ->
-        Schema;
-      Schema ->
-        case jesse_lib:is_json_object(Schema) of
-          true ->
-            Schema;
-          false ->
-            ?not_found
-        end
+    {ok, Schema} ->
+      Schema;
+    Schema ->
+      case jesse_lib:is_json_object(Schema) of
+        true ->
+          Schema;
+        false ->
+          ?not_found
+      end
   catch
     _C:_E ->
       ?not_found
@@ -451,6 +457,9 @@ load_schema(#state{schema_loader_fun = LoaderFun}, SchemaURI) ->
 
 %% @private
 get_external_validator(#state{external_validator = Fun}) ->
+  Fun.
+
+get_external_format_validator(#state{external_format_validator = Fun}) ->
   Fun.
 
 %% @private
@@ -485,11 +494,11 @@ get_current_value(#state{current_value = Value}) -> Value.
 %% @doc Getter for `current_value' within 'current_path'.
 -spec get_current_path_value(State :: state()) -> jesse:json_term().
 get_current_path_value(#state{current_value = Value, current_path = []}) ->
-    Value;
+  Value;
 get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = undefined}) ->
-    jesse_json_path:path(lists:reverse(Path), Value, ?not_found);
+  jesse_json_path:path(lists:reverse(Path), Value, ?not_found);
 get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = Getter}) ->
-    Getter(lists:reverse(Path), Value, ?not_found).
+  Getter(lists:reverse(Path), Value, ?not_found).
 
 -spec set_value(State :: state(), jesse:path(), jesse:json_term()) -> state().
 set_value(#state{ setter_fun=undefined}=State, _Path, _Value) -> State;
@@ -497,18 +506,18 @@ set_value(#state{ current_value=undefined}=State, _Path, _Value) -> State;
 set_value(#state{ setter_fun=Setter
                 , current_value=Value
                 }=State, Path, NewValue) ->
-    State#state{current_value = Setter(Path, NewValue, Value)}.
+  State#state{current_value = Setter(Path, NewValue, Value)}.
 
 -spec validator_options(State :: state()) -> jesse:validator_options().
 validator_options(#state{validator_options=Options}) -> Options.
 
 -spec validator_option(Option :: atom(), State :: state()) -> any().
 validator_option(Option, #state{validator_options=Options}) ->
-    proplists:get_value(Option, Options).
+  proplists:get_value(Option, Options).
 
 -spec validator_option( Option :: atom()
                       , State :: state()
                       , Default :: any()
                       ) -> any().
 validator_option(Option, #state{validator_options=Options}, Default) ->
-    proplists:get_value(Option, Options, Default).
+  proplists:get_value(Option, Options, Default).
