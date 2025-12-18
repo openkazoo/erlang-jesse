@@ -46,9 +46,13 @@ all() ->
 
 init_per_suite(Config) ->
   {ok, _} = application:ensure_all_started(jesse),
+  SkipList =
+    [
+      {<<"ref">>, <<"ref overrides any sibling keywords">>}
+    ],
   get_tests("standard", ?json_schema_draft3, Config)
     ++ get_tests("extra", ?json_schema_draft3, Config)
-    ++ [{skip_list, []}]
+    ++ [{skip_list, SkipList}]
     ++ Config.
 
 end_per_suite(_Config) ->

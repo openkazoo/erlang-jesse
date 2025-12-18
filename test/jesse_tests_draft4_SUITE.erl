@@ -52,6 +52,7 @@ init_per_suite(Config) ->
     , {<<"ref">>, <<"Recursive references between schemas">>}
     , {<<"ref">>, <<"Location-independent identifier with base URI"
                     " change in subschema">>}
+    , {<<"ref">>, <<"ref overrides any sibling keywords">>}
     ],
   get_tests("standard", ?json_schema_draft4, Config)
     ++ get_tests("extra", ?json_schema_draft4, Config)

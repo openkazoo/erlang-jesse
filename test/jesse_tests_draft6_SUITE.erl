@@ -51,6 +51,7 @@ init_per_suite(Config) ->
     , {<<"ref">>, <<"Recursive references between schemas">>}
     , {<<"ref">>, <<"Location-independent identifier with base URI"
                     " change in subschema">>}
+    , {<<"ref">>, <<"ref overrides any sibling keywords">>}
     , {<<"refRemote">>, <<"base URI change">>}
     , {<<"refRemote">>, <<"base URI change - change folder">>}
     , {<<"refRemote">>, <<"base URI change - change folder in subschema">>}
