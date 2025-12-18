@@ -28,8 +28,10 @@
         , get_allowed_errors/1
         , get_external_validator/1
         , get_current_path/1
+        , get_current_path_value/1
         , get_current_schema/1
         , get_current_schema_id/1
+        , get_current_value/1
         , get_default_schema_ver/1
         , get_error_handler/1
         , get_error_list/1
@@ -37,11 +39,15 @@
         , remove_last_from_path/1
         , set_allowed_errors/2
         , set_current_schema/2
+        , set_current_path/2
+        , set_value/3
         , set_error_list/2
         , resolve_ref/2
         , undo_resolve_ref/2
         , canonical_path/2
         , combine_id/2
+        , validator_options/1
+        , validator_option/2, validator_option/3
         ]).
 
 -export_type([ state/0
@@ -49,6 +55,7 @@
 
 %% Includes
 -include("jesse_schema_validator.hrl").
+
 
 %% Internal datastructures
 -record( state
@@ -62,6 +69,9 @@
          , id :: jesse:schema_id()
          , root_schema :: jesse:schema()
          , schema_loader_fun :: jesse:schema_loader_fun()
+         , current_value      :: jesse:json_term()
+         , setter_fun         :: jesse:setter_fun()
+         , validator_options  :: jesse:validator_options()
          }
        ).
 
@@ -89,6 +99,11 @@ get_allowed_errors(#state{allowed_errors = AllowedErrors}) ->
 -spec get_current_path(State :: state()) -> current_path().
 get_current_path(#state{current_path = CurrentPath}) ->
   CurrentPath.
+
+%% @doc Setter for `current_path'.
+-spec set_current_path(State :: state(), Path :: current_path()) -> state().
+set_current_path(#state{} = State, Path) ->
+  State#state{current_path = Path}.
 
 %% @doc Getter for `current_schema'.
 -spec get_current_schema(State :: state()) -> jesse:schema().
@@ -146,6 +161,16 @@ new(JsonSchema, Options) ->
                                  , Options
                                  , ?default_schema_loader_fun
                                  ),
+  SetterFun = proplists:get_value( setter_fun
+                                 , Options
+                                 ),
+  Value = proplists:get_value( with_value
+                             , Options
+                             ),
+  ValidatorOptions = proplists:get_value( validator_options
+                                        , Options
+                                        , []
+                                        ),
   NewState = #state{ root_schema        = JsonSchema
                    , current_path       = []
                    , allowed_errors     = AllowedErrors
@@ -154,6 +179,9 @@ new(JsonSchema, Options) ->
                    , default_schema_ver = DefaultSchemaVer
                    , schema_loader_fun  = LoaderFun
                    , external_validator = ExternalValidator
+                   , setter_fun         = SetterFun
+                   , current_value      = Value
+                   , validator_options  = ValidatorOptions
                    },
   set_current_schema(NewState, JsonSchema).
 
@@ -440,3 +468,34 @@ parse_ref(RefBin) ->
       {relative, Ref}
   end.
 -endif.
+
+%% @doc Getter for `current_value'.
+-spec get_current_value(State :: state()) -> jesse:json_term().
+get_current_value(#state{current_value = Value}) -> Value.
+
+%% @doc Getter for `current_value' within 'current_path'.
+-spec get_current_path_value(State :: state()) -> jesse:json_term().
+get_current_path_value(#state{current_value = Value, current_path = Path}) ->
+    jesse_json_path:path(lists:reverse(Path), Value, ?not_found).
+
+-spec set_value(State :: state(), jesse:path(), jesse:json_term()) -> state().
+set_value(#state{ setter_fun=undefined}=State, _Path, _Value) -> State;
+set_value(#state{ current_value=undefined}=State, _Path, _Value) -> State;
+set_value(#state{ setter_fun=Setter
+                , current_value=Value
+                }=State, Path, NewValue) ->
+    State#state{current_value = Setter(Path, NewValue, Value)}.
+
+-spec validator_options(State :: state()) -> jesse:validator_options().
+validator_options(#state{validator_options=Options}) -> Options.
+
+-spec validator_option(Option :: atom(), State :: state()) -> any().
+validator_option(Option, #state{validator_options=Options}) ->
+    proplists:get_value(Option, Options).
+
+-spec validator_option( Option :: atom()
+                      , State :: state()
+                      , Default :: any()
+                      ) -> any().
+validator_option(Option, #state{validator_options=Options}, Default) ->
+    proplists:get_value(Option, Options, Default).

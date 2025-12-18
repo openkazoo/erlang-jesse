@@ -41,6 +41,7 @@
              , error_handler/0
              , error_list/0
              , external_validator/0
+             , json_path/0
              , json_term/0
              , schema/0
              , schema_id/0
@@ -49,6 +50,9 @@
              , schema_loader_fun/0
              , option/0
              , options/0
+             , setter_fun/0
+             , validator_option/0
+             , validator_options/0
              ]).
 
 %% Includes
@@ -76,6 +80,8 @@
 
 -type json_term() :: term().
 
+-type json_path() :: jesse_json:kvc_key() | [jesse_json:kvc_key()].
+
 -type parser_fun() :: fun((json_term() | binary()) -> json_term()).
 
 -type schema() :: json_term().
@@ -91,13 +97,26 @@
                                              | ?not_found
                                              ).
 
+-type setter_fun_result() :: json_term().
+-type setter_fun() :: fun(( json_path()
+                          , json_term()
+                          , json_term()
+                          ) -> setter_fun_result())
+                   | undefined.
+
+-type validator_option() :: {Key :: atom(), Data :: any()}.
+-type validator_options() :: [validator_option()].
+
 -type option() :: {allowed_errors, allowed_errors()}
                 | {default_schema_ver, schema_ver()}
                 | {error_handler, error_handler()}
                 | {external_validator, external_validator()}
                 | {meta_schema_ver, schema_ver()}
                 | {parser_fun, parser_fun()}
-                | {schema_loader_fun, schema_loader_fun()}.
+                | {schema_loader_fun, schema_loader_fun()}
+                | {setter_fun, setter_fun()}
+                | {with_value, json_term()}
+                | {validator_options, validator_options()}.
 
 -type options() :: [option()].
 
