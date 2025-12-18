@@ -41,6 +41,7 @@
              , error_handler/0
              , error_list/0
              , external_validator/0
+             , external_format_validator/0
              , json_path/0
              , json_term/0
              , schema/0
@@ -67,14 +68,18 @@
                              , [jesse_error:error_reason()]
                              , non_neg_integer()
                              ) -> list()
-                                | no_return()
-                                ).
+                                    | no_return()
+                                    ).
 
 -type error_list() :: list().
 
 %% -type external_validator() :: fun((json_term(), state()) -> state())
 -type external_validator() :: fun((json_term(), any()) -> any())
                             | undefined.
+
+%% -type external_validator() :: fun((Value :: json_term(), Format :: binary()) -> boolean())
+-type external_format_validator() :: fun((json_term(), binary()) -> boolean())
+                                   | undefined.
 
 %% github.com/erlang/otp/blob/OTP-20.2.3/lib/inets/doc/src/http_uri.xml#L57
 -type http_uri_uri() :: string() | unicode:unicode_binary().
@@ -94,23 +99,23 @@
 -type schema_ver() :: binary().
 
 -type schema_loader_fun() :: fun((string()) -> {ok, schema()}
-                                             | schema()
-                                             | ?not_found
-                                             ).
+                                                 | schema()
+                                                 | ?not_found
+                                                 ).
 
 -type setter_fun_result() :: json_term().
 -type setter_fun() :: fun(( json_path()
                           , json_term()
                           , json_term()
                           ) -> setter_fun_result())
-                   | undefined.
+                    | undefined.
 
 -type getter_fun_result() :: json_term().
 -type getter_fun() :: fun(( json_path()
                           , json_term()
                           , json_term()
                           ) -> getter_fun_result())
-                   | undefined.
+                    | undefined.
 
 -type validator_option() :: {Key :: atom(), Data :: any()}.
 -type validator_options() :: [validator_option()].
@@ -144,7 +149,7 @@ main(Args) ->
 -spec add_schema( Key :: string()
                 , Schema :: schema()
                 ) -> ok
-                   | jesse_error:error().
+          | jesse_error:error().
 add_schema(Key, Schema) ->
   ValidationFun = fun jesse_lib:is_json_object/1,
   jesse_database:add(Key, Schema, ValidationFun).
@@ -156,7 +161,7 @@ add_schema(Key, Schema) ->
                 , Schema :: binary()
                 , Options :: options()
                 ) -> ok
-                   | jesse_error:error().
+          | jesse_error:error().
 add_schema(Key, Schema, Options) ->
   try
     ParserFun = proplists:get_value(parser_fun, Options, fun(X) -> X end),
@@ -213,8 +218,8 @@ load_schemas(Path, ParserFun, ValidationFun) ->
 -spec validate( Schema :: schema() | binary()
               , Data :: json_term() | binary()
               ) -> {ok, json_term()}
-                 | jesse_error:error()
-                 | jesse_database:error().
+          | jesse_error:error()
+          | jesse_database:error().
 validate(Schema, Data) ->
   validate(Schema, Data, []).
 
@@ -230,8 +235,8 @@ validate(Schema, Data) ->
               , Data :: json_term() | binary()
               , Options :: options()
               ) -> {ok, json_term()}
-                 | jesse_error:error()
-                 | jesse_database:error().
+          | jesse_error:error()
+          | jesse_database:error().
 validate(Schema, Data, Options) ->
   try
     ParserFun = proplists:get_value(parser_fun, Options, fun(X) -> X end),
@@ -248,7 +253,7 @@ validate(Schema, Data, Options) ->
 -spec validate_with_schema( Schema :: schema() | binary()
                           , Data :: json_term() | binary()
                           ) -> {ok, json_term()}
-                             | jesse_error:error().
+          | jesse_error:error().
 validate_with_schema(Schema, Data) ->
   validate_with_schema(Schema, Data, []).
 
@@ -264,7 +269,7 @@ validate_with_schema(Schema, Data) ->
                           , Data :: json_term() | binary()
                           , Options :: options()
                           ) -> {ok, json_term()}
-                             | jesse_error:error().
+          | jesse_error:error().
 validate_with_schema(Schema, Data, Options) ->
   try
     ParserFun = proplists:get_value(parser_fun, Options, fun(X) -> X end),
