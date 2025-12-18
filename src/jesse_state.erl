@@ -452,9 +452,12 @@ load_schema(#state{schema_loader_fun = LoaderFun}, SchemaURI) ->
   end.
 
 %% @private
+-spec get_external_validator(State :: state()) -> jesse:external_validator().
 get_external_validator(#state{external_validator = Fun}) ->
   Fun.
 
+-spec get_external_format_validator(State :: state()) ->
+          jesse:external_format_validator().
 get_external_format_validator(#state{external_format_validator = Fun}) ->
   Fun.
 
@@ -496,7 +499,7 @@ get_current_path_value(#state{current_value = Value, current_path = Path, getter
 get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = Getter}) ->
   Getter(lists:reverse(Path), Value, ?not_found).
 
--spec set_value(State :: state(), jesse:path(), jesse:json_term()) -> state().
+-spec set_value(State :: state(), jesse:json_path(), jesse:json_term()) -> state().
 set_value(#state{ setter_fun=undefined}=State, _Path, _Value) -> State;
 set_value(#state{ current_value=undefined}=State, _Path, _Value) -> State;
 set_value(#state{ setter_fun=Setter

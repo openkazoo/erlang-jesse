@@ -263,6 +263,8 @@ check_value(Value, [_Attr | Attrs], State) ->
 %%% Internal functions
 %% @doc Continues validation with updated value
 %% @private
+-spec check_value(Attrs :: list(), State :: jesse_state:state()) ->
+          jesse_state:state() | no_return().
 check_value(Attrs, State) ->
   V = jesse_state:get_current_path_value(State),
   check_value(V, Attrs, State).
@@ -1003,6 +1005,10 @@ check_enum(Value, Enum, State) ->
 %% @doc format
 %% Used for semantic validation.
 %% @private
+-spec check_format(Value :: jesse:json_term(),
+                   Format :: binary(),
+                   State :: jesse_state:state()) ->
+          jesse_state:state().
 check_format(Value, _Format = <<"date-time">>, State) when is_binary(Value) ->
   case valid_datetime(Value) of
     true  -> State;
@@ -1034,9 +1040,20 @@ check_format(Value, _Format = <<"uri">>, State) when is_binary(Value) ->
 check_format(Value, Format, State) ->
   maybe_check_external_format(Value, Format, State).
 
+%% @private
+-spec maybe_check_external_format(Value :: jesse:json_term(),
+                                  Format :: binary(),
+                                  State :: jesse_state:state()) ->
+          jesse_state:state().
 maybe_check_external_format(Value, Format, State) ->
   maybe_check_external_format(Value, Format, State, jesse_state:get_external_format_validator(State)).
 
+%% @private
+-spec maybe_check_external_format(Value :: jesse:json_term(),
+                                  Format :: binary(),
+                                  State :: jesse_state:state(),
+                                  Fun :: jesse:external_format_validator()) ->
+          jesse_state:state().
 maybe_check_external_format(_Value, _Format, State, undefined) ->
   State;
 maybe_check_external_format(Value, Format, State, Fun) ->

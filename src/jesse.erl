@@ -86,7 +86,7 @@
 
 -type json_term() :: term().
 
--type json_path() :: jesse_json:kvc_key() | [jesse_json:kvc_key()].
+-type json_path() :: jesse_json_path:kvc_key() | [jesse_json_path:kvc_key()].
 
 -type parser_fun() :: fun((json_term() | binary()) -> json_term()).
 
