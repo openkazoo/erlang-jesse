@@ -126,7 +126,7 @@ check_value(Value, [{?ITEMS, Items} | Attrs], State) ->
                true  -> check_items(Value, Items, State);
                false -> State
              end,
-  check_value(Value, Attrs, NewState);
+  check_value(Attrs, NewState);
 %% doesn't really do anything, since this attribute will be handled
 %% by the previous function clause if it's presented in the schema
 check_value( Value

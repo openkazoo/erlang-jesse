@@ -71,6 +71,7 @@
          , schema_loader_fun :: jesse:schema_loader_fun()
          , current_value      :: jesse:json_term()
          , setter_fun         :: jesse:setter_fun()
+         , getter_fun         :: jesse:getter_fun()
          , validator_options  :: jesse:validator_options()
          }
        ).
@@ -164,6 +165,9 @@ new(JsonSchema, Options) ->
   SetterFun = proplists:get_value( setter_fun
                                  , Options
                                  ),
+  GetterFun = proplists:get_value( getter_fun
+                                 , Options
+                                 ),
   Value = proplists:get_value( with_value
                              , Options
                              ),
@@ -180,6 +184,7 @@ new(JsonSchema, Options) ->
                    , schema_loader_fun  = LoaderFun
                    , external_validator = ExternalValidator
                    , setter_fun         = SetterFun
+                   , getter_fun         = GetterFun
                    , current_value      = Value
                    , validator_options  = ValidatorOptions
                    },
@@ -475,8 +480,12 @@ get_current_value(#state{current_value = Value}) -> Value.
 
 %% @doc Getter for `current_value' within 'current_path'.
 -spec get_current_path_value(State :: state()) -> jesse:json_term().
-get_current_path_value(#state{current_value = Value, current_path = Path}) ->
-    jesse_json_path:path(lists:reverse(Path), Value, ?not_found).
+get_current_path_value(#state{current_value = Value, current_path = []}) ->
+    Value;
+get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = undefined}) ->
+    jesse_json_path:path(lists:reverse(Path), Value, ?not_found);
+get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = Getter}) ->
+    Getter(lists:reverse(Path), Value, ?not_found).
 
 -spec set_value(State :: state(), jesse:path(), jesse:json_term()) -> state().
 set_value(#state{ setter_fun=undefined}=State, _Path, _Value) -> State;

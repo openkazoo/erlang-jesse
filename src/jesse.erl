@@ -51,6 +51,7 @@
              , option/0
              , options/0
              , setter_fun/0
+             , getter_fun/0
              , validator_option/0
              , validator_options/0
              ]).
@@ -104,6 +105,13 @@
                           ) -> setter_fun_result())
                    | undefined.
 
+-type getter_fun_result() :: json_term().
+-type getter_fun() :: fun(( json_path()
+                          , json_term()
+                          , json_term()
+                          ) -> getter_fun_result())
+                   | undefined.
+
 -type validator_option() :: {Key :: atom(), Data :: any()}.
 -type validator_options() :: [validator_option()].
 
@@ -115,6 +123,7 @@
                 | {parser_fun, parser_fun()}
                 | {schema_loader_fun, schema_loader_fun()}
                 | {setter_fun, setter_fun()}
+                | {getter_fun, getter_fun()}
                 | {with_value, json_term()}
                 | {validator_options, validator_options()}.
 
