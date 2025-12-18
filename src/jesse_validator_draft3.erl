@@ -63,8 +63,9 @@
                  , JsonSchema :: jesse:schema()
                  , State :: jesse_state:state()
                  ) -> jesse_state:state() | no_return().
-check_value(Value, [{?REF, RefSchemaURI} | _], State) ->
-  validate_ref(Value, RefSchemaURI, State);
+check_value(Value, [{?REF, RefSchemaURI} | Attrs], State) ->
+  NewState = validate_ref(Value, RefSchemaURI, State),
+  check_value(Value, Attrs, NewState);
 check_value(Value, [{?TYPE, Type} | Attrs], State) ->
   NewState = check_type(Value, Type, State),
   check_value(Value, Attrs, NewState);

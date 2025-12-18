@@ -83,8 +83,9 @@
                  ) -> jesse_state:state() | no_return().
 check_value(_Value, [{?ID, _ID} | _Attrs], State) ->
   handle_schema_invalid(?wrong_draft4_id_tag, State);
-check_value(Value, [{?REF, RefSchemaURI} | _], State) ->
-  validate_ref(Value, RefSchemaURI, State);
+check_value(Value, [{?REF, RefSchemaURI} | Attrs], State) ->
+  NewState = validate_ref(Value, RefSchemaURI, State),
+  check_value(Value, Attrs, NewState);
 check_value(Value, [{?TYPE, Type} | Attrs], State) ->
   NewState = check_type(Value, Type, State),
   check_value(Value, Attrs, NewState);
