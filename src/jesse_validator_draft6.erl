@@ -393,7 +393,13 @@ check_properties(Value, Properties, State) ->
                          ?not_found ->
                            case get_value(?DEFAULT, PropertySchema) of
                              ?not_found -> CurrentState;
-                             Default -> check_default(PropertyName, PropertySchema, Default, CurrentState)
+                             Default ->
+                               check_default(
+                                 PropertyName,
+                                 PropertySchema,
+                                 Default,
+                                 CurrentState
+                               )
                            end;
                          Property ->
                            NewState = set_current_schema(
@@ -1335,7 +1341,9 @@ set_value(PropertyName, Value, State) ->
 check_default_for_type(Default, State) ->
   jesse_state:validator_option('use_defaults', State, false)
     andalso (not jesse_lib:is_json_object(Default)
-             orelse jesse_state:validator_option('apply_defaults_to_empty_objects', State, false)
+             orelse jesse_state:validator_option(
+                      'apply_defaults_to_empty_objects', State, false
+                    )
              orelse not jesse_lib:is_json_object_empty(Default)).
 
 %% @private

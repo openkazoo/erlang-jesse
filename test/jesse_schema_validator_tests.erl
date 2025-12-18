@@ -51,10 +51,10 @@ setter_test() ->
             ],
 
   [ ?assertEqual({ok, Value}
-                ,jesse_schema_validator:validate(Schema, Value, [])
+                , jesse_schema_validator:validate(Schema, Value, [])
                 )
   , ?assertEqual({ok, Default}
-                ,jesse_schema_validator:validate(Schema, Value, Options)
+                , jesse_schema_validator:validate(Schema, Value, Options)
                 )
   ].
 

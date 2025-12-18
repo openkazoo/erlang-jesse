@@ -414,7 +414,13 @@ check_properties(Value, Properties, State) ->
                          ?not_found ->
                            case get_value(?DEFAULT, PropertySchema) of
                              ?not_found -> CurrentState;
-                             Default -> check_default(PropertyName, PropertySchema, Default, CurrentState)
+                             Default ->
+                               check_default(
+                                 PropertyName,
+                                 PropertySchema,
+                                 Default,
+                                 CurrentState
+                               )
                            end;
                          Property ->
                            NewState = set_current_schema( CurrentState
@@ -436,7 +442,9 @@ check_properties(Value, Properties, State) ->
 %% See check_properties/3.
 %% @private
 check_pattern_properties(Value, PatternProperties, State) ->
-  P1P2 = [{P1, P2} || P1 <- unwrap(Value), P2  <- unwrap(PatternProperties)],
+  P1P2 =
+    [{P1, P2} || P1 <- unwrap(Value),
+                P2 <- unwrap(PatternProperties)],
   TmpState = lists:foldl( fun({Property, Pattern}, CurrentState) ->
                               check_match(Property, Pattern, CurrentState)
                           end
@@ -872,10 +880,11 @@ check_unique_items(Value, true, State) ->
     %% First we do an efficient check for duplicates: convert the list to a set
     %% and if there are no duplicates, the set and the list have the same length
     %% In order to avoid differences for lists in which order is not relevant
-    %% (e.g. JSON properties of an object maybe represented as a proplist), these
-    %% lists for which order is not relevant are sorted (objects are normalized).
+    %% (e.g. JSON properties of an object maybe represented as a proplist),
+    %% these lists for which order is not relevant are sorted (objects are
+    %% normalized).
     %% If the first efficient check fails, then we search for the items that are
-    %% duplicated with a less efficient check (that will very seldom be executed).
+    %% duplicated with a less efficient check (that will very seldom be run).
     NormalizedValue = jesse_lib:normalize_and_sort(Value),
     NoDuplicates = ?SET_FROM_LIST(NormalizedValue),
     case sets:size(NoDuplicates) == length(Value) of
@@ -1046,7 +1055,12 @@ check_format(Value, Format, State) ->
                                   State :: jesse_state:state()) ->
           jesse_state:state().
 maybe_check_external_format(Value, Format, State) ->
-  maybe_check_external_format(Value, Format, State, jesse_state:get_external_format_validator(State)).
+  maybe_check_external_format(
+    Value,
+    Format,
+    State,
+    jesse_state:get_external_format_validator(State)
+  ).
 
 %% @private
 -spec maybe_check_external_format(Value :: jesse:json_term(),
@@ -1256,7 +1270,10 @@ check_any_of_(Value, [Schema | Schemas], State, Errors) ->
 %% @private
 check_one_of(Value, [_ | _] = Schemas, State) ->
   ErrorsBefore = jesse_state:get_error_list(State),
-  NewState = check_one_of_(Value, Schemas, jesse_state:set_error_list(State, []), 0, []),
+  NewState =
+    check_one_of_(
+      Value, Schemas, jesse_state:set_error_list(State, []), 0, []
+    ),
   ErrorsAfter = jesse_state:get_error_list(NewState),
   jesse_state:set_error_list(NewState, ErrorsBefore ++ ErrorsAfter);
 check_one_of(_Value, _InvalidSchemas, State) ->
@@ -1265,7 +1282,11 @@ check_one_of(_Value, _InvalidSchemas, State) ->
 check_one_of_(_Value, [], State, 1, _Errors) ->
   jesse_state:set_error_list(State, []);
 check_one_of_(Value, [], State, 0, Errors) ->
-  handle_data_invalid({?not_one_schema_valid, Errors}, Value, jesse_state:set_error_list(State, []));
+  handle_data_invalid(
+    {?not_one_schema_valid, Errors},
+    Value,
+    jesse_state:set_error_list(State, [])
+  );
 check_one_of_(Value, _Schemas, State, Valid, _Errors) when Valid > 1 ->
   handle_data_invalid(?more_than_one_schema_valid, Value, State);
 check_one_of_(Value, [Schema | Schemas], State, Valid, Errors) ->
@@ -1445,7 +1466,9 @@ set_value(PropertyName, Value, State) ->
 check_default_for_type(Default, State) ->
   jesse_state:validator_option('use_defaults', State, false)
     andalso (not jesse_lib:is_json_object(Default)
-             orelse jesse_state:validator_option('apply_defaults_to_empty_objects', State, false)
+             orelse jesse_state:validator_option(
+                      'apply_defaults_to_empty_objects', State, false
+                    )
              orelse not jesse_lib:is_json_object_empty(Default)).
 
 %% @private

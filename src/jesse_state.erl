@@ -494,12 +494,17 @@ get_current_value(#state{current_value = Value}) -> Value.
 -spec get_current_path_value(State :: state()) -> jesse:json_term().
 get_current_path_value(#state{current_value = Value, current_path = []}) ->
   Value;
-get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = undefined}) ->
+get_current_path_value(
+  #state{current_value = Value, current_path = Path, getter_fun = undefined}
+) ->
   jesse_json_path:path(lists:reverse(Path), Value, ?not_found);
-get_current_path_value(#state{current_value = Value, current_path = Path, getter_fun = Getter}) ->
+get_current_path_value(
+  #state{current_value = Value, current_path = Path, getter_fun = Getter}
+) ->
   Getter(lists:reverse(Path), Value, ?not_found).
 
--spec set_value(State :: state(), jesse:json_path(), jesse:json_term()) -> state().
+-spec set_value(State :: state(), jesse:json_path(), jesse:json_term()) ->
+          state().
 set_value(#state{ setter_fun=undefined}=State, _Path, _Value) -> State;
 set_value(#state{ current_value=undefined}=State, _Path, _Value) -> State;
 set_value(#state{ setter_fun=Setter

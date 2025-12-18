@@ -367,7 +367,8 @@ wrong_type(Value, State) ->
 %%                                NewState = set_current_schema( CurrentState
 %%                                                             , PropertySchema
 %%                                                             ),
-%%                                handle_data_invalid( {?missing_required_property
+%%                                handle_data_invalid(
+%%                                  {?missing_required_property
 %%                                                      , PropertyName}
 %%                                                    , Value
 %%                                                    , NewState);
@@ -400,7 +401,13 @@ check_properties(Value, Properties, State) ->
                                                              , Value
                                                              , CurrentState
                                                              );
-                                 Default -> check_default(PropertyName, PropertySchema, Default, CurrentState)
+                                 Default ->
+                                   check_default(
+                                     PropertyName,
+                                     PropertySchema,
+                                     Default,
+                                     CurrentState
+                                   )
                              end;
                          Property ->
                            NewState = set_current_schema( CurrentState
@@ -1067,7 +1074,9 @@ set_value(PropertyName, Value, State) ->
 check_default_for_type(Default, State) ->
     jesse_state:validator_option('use_defaults', State, false)
       andalso (not jesse_lib:is_json_object(Default)
-      orelse jesse_state:validator_option('apply_defaults_to_empty_objects', State, false)
+      orelse jesse_state:validator_option(
+               'apply_defaults_to_empty_objects', State, false
+             )
       orelse not jesse_lib:is_json_object_empty(Default)).
 
 %% @private
@@ -1086,7 +1095,10 @@ is_valid_default(Type, Default, State)
 is_valid_default(Types, Default, State)
   when is_list(Types) ->
     check_default_for_type(Default, State)
-        andalso lists:any(fun(Type) -> is_type_valid(Default, Type, State) end, Types);
+        andalso lists:any(
+                  fun(Type) -> is_type_valid(Default, Type, State) end,
+                  Types
+                );
 is_valid_default(_, _Default, _State) -> false.
 
 %% @private
