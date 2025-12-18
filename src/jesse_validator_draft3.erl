@@ -76,7 +76,7 @@ check_value(Value, [{?PROPERTIES, Properties} | Attrs], State) ->
                                         );
                false -> State
              end,
-  check_value(Value, Attrs, NewState);
+  check_value(Attrs, NewState);
 check_value( Value
            , [{?PATTERNPROPERTIES, PatternProperties} | Attrs]
            , State
@@ -88,7 +88,7 @@ check_value( Value
                                                 );
                false -> State
              end,
-  check_value(Value, Attrs, NewState);
+  check_value(Attrs, NewState);
 check_value( Value
            , [{?ADDITIONALPROPERTIES, AdditionalProperties} | Attrs]
            , State
@@ -220,6 +220,12 @@ check_value(Value, [_Attr | Attrs], State) ->
   check_value(Value, Attrs, State).
 
 %%% Internal functions
+%% @doc Continues validation with updated value
+%% @private
+check_value(Attrs, State) ->
+  V = jesse_state:get_current_path_value(State),
+  check_value(V, Attrs, State).
+
 %% @doc Adds Property to the current path and checks the value
 %% using jesse_schema_validator:validate_with_state/3.
 %% @private
